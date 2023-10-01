@@ -167,8 +167,7 @@ export const getServerSideProps = async (
   }
   let movies = null;
   if (session?.user) {
-    await queryClient.fetchQuery([`movies`], () => getMovies());
-    await queryClient.fetchQuery([`restaurants`], () => getMovies());
+    await Promise.all([queryClient.fetchQuery([`movies`], () => getMovies()), queryClient.fetchQuery([`restaurants`], () => getMovies())])
   }
 
   return { props: { session, movies } };
