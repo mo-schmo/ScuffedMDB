@@ -121,6 +121,6 @@ export default MovieAPI;
 export const fetchAllMovies = async (): Promise<MovieType[]> => {
   const movies = Movie.find({})
     .populate(`reviews.user`, `username discord_id image discriminator`)
-    .sort({ createdAt: -1 });
+    .sort({ updatedAt: -1 });
   return movies;
 };

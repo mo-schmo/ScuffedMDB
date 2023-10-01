@@ -80,6 +80,6 @@ export default async function handler(
 export const fetchAllRestaurants = async (): Promise<RestaurantType[]> => {
     const restaurants = Restaurant.find({})
         .populate(`reviews.user`, `username discord_id image discriminator`)
-        .sort({ createdAt: -1 });
+        .sort({ updatedAt: -1 });
     return restaurants;
 };
