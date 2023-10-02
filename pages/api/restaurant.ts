@@ -11,13 +11,13 @@ export default async function handler(
     res: NextApiResponse
 ): Promise<void | NextApiResponse<any>> {
     const session = await getSession({ req });
-    if (!session?.user) {
-      return res
-        .status(401)
-        .json({ message: 'Please log in to view this content' });
-    }
     await dbConnect();
     if (req.method === `POST`) {
+        if (!session?.user) {
+            return res
+                .status(401)
+                .json({ message: 'Please log in to view this content' });
+        }
         try {
             const body: YelpMatchResponse = JSON.parse(req.body)
             const exists = await Restaurant.findOne({ alias: body.alias })
@@ -57,17 +57,22 @@ export default async function handler(
             return res.status(200).send({ data: restaurants });
         } catch (err) {
             console.error(err);
-            return res.status(500).json({message: "Internal server error"});
+            return res.status(500).json({ message: "Internal server error" });
         }
     }
     else if (req.method === 'DELETE') {
-        const {id} = JSON.parse(req.body);
-        const restaurant = await Restaurant.findOne({_id: id});
-        if(!restaurant){
-            return res.status(404).json({message: "Unable to find by id"});
+        if (!session?.user?.isAdmin) {
+            return res
+                .status(401)
+                .json({ message: `You are not authorized to do that :(` });
         }
-        const deleted = await Restaurant.deleteOne({_id: id});
-        if(deleted.ok === 1){
+        const { id } = JSON.parse(req.body);
+        const restaurant = await Restaurant.findOne({ _id: id });
+        if (!restaurant) {
+            return res.status(404).json({ message: "Unable to find by id" });
+        }
+        const deleted = await Restaurant.deleteOne({ _id: id });
+        if (deleted.ok === 1) {
             return res.status(200).json(restaurant);
         }
         return res.status(500);

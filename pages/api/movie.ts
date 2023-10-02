@@ -75,11 +75,6 @@ const MovieAPI = async (
     }
   } else if (req.method === `GET`) {
     try {
-      if (!session?.user) {
-        return res
-          .status(401)
-          .json({ message: 'Please log in to view this content' });
-      }
       const movies = await fetchAllMovies();
 
       return res.status(200).send({ data: movies });
