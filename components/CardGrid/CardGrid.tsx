@@ -46,21 +46,24 @@ import { ViewContext } from 'utils/ViewContext';
 import { ReviewType, SerializedMovieType } from '../../models/movie';
 import { PopulatedUserType } from '../../models/user';
 import { getColorSchemeCharCode, getMovieGenres } from '../../utils/utils';
-import Card from '../Card';
+import Card, { BookCard } from '../Card';
 import MovieGridView from '../MovieGridView';
 import ReviewModal from '../ReviewModal';
 import { GiBookshelf } from "react-icons/gi";
+import { SerializedBookType } from 'models/book';
 
 interface CardGridProps {
   movies: SerializedMovieType<ReviewType<PopulatedUserType>[]>[];
   user: UserAuthType;
   restaurants?: any;
+  books?: SerializedBookType<ReviewType<PopulatedUserType>[]>[];
 }
 
 export const CardGrid: React.FC<CardGridProps> = ({
   movies: unSortedMovies,
   restaurants,
   user,
+  books
 }): React.ReactElement => {
   const bp = useBreakpoint();
   const [filter, setFilter] = useState('');
@@ -68,6 +71,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
   const [cardView, setCardView] = useState(true);
   const [isMovieView, setMovieView] = useState(false);
   const [isRestaurantView, setRestaurantView] = useState(false);
+  const [isBookView, setBookView] = useState(false);
   const { view } = useContext(ViewContext);
   const [genres, setGenres] = useState<string[]>([]);
   const [isGenreFilterActive, setIsGenreFilterActive] = useState(false);
@@ -80,17 +84,21 @@ export const CardGrid: React.FC<CardGridProps> = ({
 
   // use effect hooks
   useEffect(() => {
+    console.log(books);
     if (view === 'movies') {
       setMovieView(true);
       setRestaurantView(false);
+      setBookView(false);
       setCardView(true);
     }
     else if (view === 'restaurants') {
       setRestaurantView(true);
       setMovieView(false);
+      setBookView(false);
       setCardView(true);
     }
     else if (view === 'books') {
+      setBookView(true);
       setMovieView(false);
       setRestaurantView(false);
       setCardView(true);
@@ -160,7 +168,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
     });
   };
   function checkForValidView() {
-    return (isMovieView && restaurants?.data) || (isRestaurantView && movies?.data);
+    return (isMovieView && restaurants?.data) || (isRestaurantView && movies?.data) || (isBookView && books?.length > 0);
   }
 
   return (
@@ -429,7 +437,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
                   ) => (
                     <Card
                       movie={movie}
-                      key={`${i.toString()}card`}
+                      key={`${i.toString()}-movie-card`}
                     />
                   )
                 )
@@ -442,6 +450,13 @@ export const CardGrid: React.FC<CardGridProps> = ({
                       restaurant={restaurant}
                       key={`${i.toString()}-restaurant-card`}
                     />
+                  ))
+                )
+              }
+              {
+                isBookView && (
+                  books?.map((book : SerializedBookType, i) => (
+                    <BookCard book={book} key={`${i.toString()}-book-card`}/>
                   ))
                 )
               }

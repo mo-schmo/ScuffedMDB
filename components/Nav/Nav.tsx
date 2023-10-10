@@ -21,7 +21,7 @@ import {
   Collapse
 } from '@chakra-ui/react';
 import { transparentize } from '@chakra-ui/theme-tools';
-import { IoMoon, IoSunny, IoRestaurantOutline, IoHomeOutline, IoBookOutline } from 'react-icons/io5';
+import { IoMoon, IoSunny, IoRestaurantOutline, IoHomeOutline, IoBookOutline, IoAppsOutline, IoEllipsisVerticalOutline } from 'react-icons/io5';
 import { BiCameraMovie } from "react-icons/bi";
 import Link from 'next/link';
 import MovieModal from '../MovieModal';
@@ -122,6 +122,13 @@ export const Nav: React.FC<NavProps> = ({
               colorScheme={`${process.env.COLOR_THEME}`}
               variant='ghost'
             >Restaurants</Button>
+            <Button onClick={() => {
+              setView('books');
+              router.push('/', undefined, { shallow: true })
+            }}
+              colorScheme={`${process.env.COLOR_THEME}`}
+              variant='ghost'
+            >Books</Button>
           </HStack>
           <HStack align="center" spacing={'15px'} mx={4}>
             <IconButton
@@ -377,7 +384,7 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
               aria-label='Done'
               fontSize='20px'
               size='lg'
-              icon={<AddIcon />}
+              icon={<IoAppsOutline />}
               onClick={handleToggle}
             />
           </>

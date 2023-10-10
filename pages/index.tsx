@@ -73,7 +73,7 @@ export default function Home({
             />
           </Center>
         ) : (
-          <HomePage user={session.user} movies={data} restaurants={restaurantData} />
+          <HomePage user={session.user} movies={data} restaurants={restaurantData} books={books}/>
         )
       }
     </>

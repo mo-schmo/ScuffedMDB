@@ -57,8 +57,16 @@ export const MovieModal: React.FC<{ inMobileNav?: boolean }> = ({
       if (success?.type === 'addition' && success?.category === 'movie') {
         queryClient.invalidateQueries({ queryKey: [`movies`] });
       }
-      if (success?.type === 'addition' && success?.category === 'restaurant') {
+      else if (success?.type === 'addition' && success?.category === 'restaurant') {
         queryClient.invalidateQueries({ queryKey: [`restaurants`] });
+      }
+      else if (success?.type === 'addition' && success?.category === 'books') {
+        queryClient.invalidateQueries({ queryKey: [`books`] });
+      }
+      else {
+        queryClient.invalidateQueries({ queryKey: [`movies`] });
+        queryClient.invalidateQueries({ queryKey: [`restaurants`] });
+        queryClient.invalidateQueries({ queryKey: [`books`] });
       }
       toast({
         variant: `subtle`,
