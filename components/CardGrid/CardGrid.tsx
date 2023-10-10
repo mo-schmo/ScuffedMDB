@@ -32,7 +32,8 @@ import {
   useColorModeValue,
   useTheme,
   useToast,
-  VStack
+  VStack,
+  Box
 } from '@chakra-ui/react';
 import { transparentize } from '@chakra-ui/theme-tools';
 import { UserAuthType } from 'next-auth';
@@ -455,8 +456,10 @@ export const CardGrid: React.FC<CardGridProps> = ({
               }
               {
                 isBookView && (
-                  books?.map((book : SerializedBookType, i) => (
-                    <BookCard book={book} key={`${i.toString()}-book-card`}/>
+                  books?.map((book: SerializedBookType, i) => (
+                    <Box height='auto' key={`${i.toString()}-book-card`}>
+                      <BookCard book={book} />
+                    </Box>
                   ))
                 )
               }
