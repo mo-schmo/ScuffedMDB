@@ -52,6 +52,7 @@ const handler = async (
                 authors: googleData?.volumeInfo?.authors,
                 title: googleData?.volumeInfo?.title,
                 description: googleData?.volumeInfo?.description,
+                textSnippet: googleData?.searchInfo?.textSnippet,
                 pageCount: googleData?.volumeInfo?.pageCount,
                 publishedDate: googleData?.volumeInfo?.publishedDate,
                 imageUrl: googleData?.volumeInfo?.imageLinks?.thumbnail,

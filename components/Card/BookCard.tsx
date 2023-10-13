@@ -43,7 +43,7 @@ export const BookCard: React.FC<CardProps> = ({
     useEffect(() => {
         setImage(book?.imageUrl);
         setViewLoaded(true);
-    }, [])
+    }, [book])
 
     function toTitleCase(str) {
         return str.replace(
@@ -150,12 +150,18 @@ export const BookCard: React.FC<CardProps> = ({
                     <Collapse in={show} className='items-center'>
                         <Flex direction={'column'}>
                             <Container centerContent fontSize={'sm'} noOfLines={8}>
-                                {book?.description}
+                                {book?.textSnippet ?? book?.description}
                             </Container>
-                            <Button m={3}>View Book</Button>
                         </Flex>
                     </Collapse>
-
+                    {
+                        show &&
+                        <Link href={`/book/${book?._id}` ?? '/'} passHref>
+                            <Button m={3}>
+                                View Book
+                            </Button>
+                        </Link>
+                    }
                 </chakra.div>
             </Box>
         </Skeleton>

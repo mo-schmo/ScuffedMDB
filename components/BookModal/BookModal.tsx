@@ -146,6 +146,9 @@ function BookSearchResult({ data, loading, setSuccess, setError, onClose }: any)
                 setSuccess(data);
                 onClose();
             }
+            else {
+                setError("Unable to add book. Try again later");
+            }
         }
         catch {
             setError(data?.message ?? "An error occured");

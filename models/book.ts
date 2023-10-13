@@ -21,14 +21,15 @@ const bookSchema = new mongoose.Schema(
         isbn: {type: String, required: true}, //google
         googleId: {type: String, required: true}, //google
         googleLink: {type: String}, //google
-        openlibraryKey: {type: String, required: true}, //openlib
-        openlibraryUrl: {type: String, required: true}, //openlib
+        openlibraryKey: {type: String}, //openlib
+        openlibraryUrl: {type: String}, //openlib
         goodreadsId: {type: String}, //openlib
         amazonId: {type: String}, //openlib
-        authors: [{ type: String }], //googled
+        authors: [{ type: String }], //google
         title: {type: String, required: true}, //google
-        subjects: [{ type: String }], //openlib
+        subjects: [{ type: String }], //openlib 
         description: {type: String}, //google
+        textSnippet: {type: String},
         pageCount: {type: Number}, //google
         publishedDate: {type: String}, //google
         imageUrl: {type: String}, //google
@@ -67,6 +68,7 @@ export interface BookType<T = ReviewType[]> extends Document {
     title?: string,
     subjects?: string[],
     description?: string,
+    textSnippet?: string,
     pageCount?: number,
     publishedDate?: string,
     imageUrl?: string,
