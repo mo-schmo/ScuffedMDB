@@ -112,7 +112,7 @@ export default function BookDetails({ book, user }: Props): any {
           </Flex>
         )}
         <Box minHeight="calc(100vh - 80px)">
-          {/* <AdminOptions user={user} movie={movie} /> */}
+          <AdminOptions user={user} book={book} />
           <Flex direction={{ base: 'column', lg: 'row' }}>
             <Flex
               width={{ base: '90%', lg: '50%' }}
@@ -196,10 +196,10 @@ export default function BookDetails({ book, user }: Props): any {
                   Show {show ? 'Less' : 'More'}
                 </Button>
                 {
-                  show && <ChevronDownIcon className='rotate-180' boxSize={5}/>
+                  show && <ChevronDownIcon className='rotate-180' boxSize={5} />
                 }
                 {
-                  !show && <ChevronDownIcon boxSize={5}/>
+                  !show && <ChevronDownIcon boxSize={5} />
                 }
               </Flex>
               <Flex

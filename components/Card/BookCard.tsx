@@ -17,13 +17,11 @@ import {
     Collapse
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import { ReviewType, SerializedMovieType } from '../../models/movie';
 import Rating from '../Rating';
 import { PopulatedUserType } from '../../models/user';
 import { getColorSchemeCharCode } from '../../utils/utils';
 import { useState, useEffect } from 'react';
-import restaurant from 'models/restaurant';
-import { SerializedBookType } from 'models/book';
+import { ReviewType, SerializedBookType } from 'models/book';
 
 interface CardProps {
     book?: SerializedBookType<ReviewType<PopulatedUserType>[]>;

@@ -18,6 +18,7 @@ import nProgress from 'nprogress';
 import { GetServerSidePropsContext } from 'next';
 import { Session } from 'next-auth';
 import { SerializedRestaurantType } from 'models/restaurant';
+import { SerializedBookType } from 'models/book';
 
 
 function MyApp({ Component, pageProps }: AppProps): React.ReactChild {
@@ -43,6 +44,7 @@ function MyApp({ Component, pageProps }: AppProps): React.ReactChild {
   const [restaurant, setRestaurant] = useState<SerializedRestaurantType<
     ReviewType<PopulatedUserType>[]
   > | null>(null);
+  const [book, setBook] = useState<SerializedBookType<ReviewType<PopulatedUserType>[]> | null>(null);
   const [view, setView] = useState('movies');
 
   const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'ScuffedMDB';
@@ -93,7 +95,7 @@ function MyApp({ Component, pageProps }: AppProps): React.ReactChild {
             <Hydrate state={pageProps.dehydratedState}>
               <ChakraProvider theme={theme}>
                 <ReviewModalContext.Provider
-                  value={{ isOpen, onOpen, onClose, movie, setMovie, restaurant, setRestaurant }}
+                  value={{ isOpen, onOpen, onClose, movie, setMovie, restaurant, setRestaurant, book, setBook }}
                 >
                   <ViewContext.Provider value={{ view, setView }}>
                     <Component {...pageProps} />

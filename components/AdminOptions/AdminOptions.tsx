@@ -1,6 +1,7 @@
 import { UserAuthType } from 'next-auth';
 import { ReviewType, SerializedMovieType } from 'models/movie';
 import { SerializedRestaurantType } from 'models/restaurant';
+import { SerializedBookType } from 'models/book';
 import { PopulatedUserType } from 'models/user';
 import React, { ReactElement, useContext, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -48,14 +49,16 @@ export default function AdminOptions({
     user,
     movie,
     restaurant,
+    book
 }: {
     user: UserAuthType;
     movie?: SerializedMovieType<ReviewType<PopulatedUserType>[]>;
     restaurant?: SerializedRestaurantType<ReviewType<PopulatedUserType>[]>;
+    book?: SerializedBookType<ReviewType<PopulatedUserType>[]>;
 }) {
     const { colorMode } = useColorMode();
 
-    const { onOpen: reviewOnOpen, setMovie: setModalMovie, setRestaurant: setModalRestaurant } = useContext(
+    const { onOpen: reviewOnOpen, setMovie: setModalMovie, setRestaurant: setModalRestaurant, setBook: setModalBook } = useContext(
         ReviewModalContext
     );
     const toast = useToast();
@@ -69,6 +72,7 @@ export default function AdminOptions({
     function showAddIcon() {
         return (movie && !movie.reviews.find((rvw) => rvw.user?._id === user.sub))
             || (restaurant && !restaurant.reviews.find((rvw) => rvw.user?._id === user.sub))
+            || (book && !book.reviews.find((rvw) => rvw.user?._id === user.sub))
     };
 
     const handleMovieDelete = async () => {
@@ -93,7 +97,7 @@ export default function AdminOptions({
                     isClosable: true,
                 });
             }
-            router.push('/');
+            router.push('/', undefined, { shallow: true });
             toast({
                 variant: `subtle`,
                 title: `Movie Deleted`,
@@ -134,11 +138,53 @@ export default function AdminOptions({
                     isClosable: true,
                 });
             }
-            router.push('/');
+            router.push('/', undefined, { shallow: true });
             toast({
                 variant: `subtle`,
                 title: `Restaurant Deleted`,
                 description: `${data.name} was deleted successfully :)`,
+                status: `success`,
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+        catch (err) {
+            toast({
+                variant: `subtle`,
+                title: `There was an error`,
+                description: err.message,
+                status: `error`,
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+    }
+
+    const handleBookDelete = async () => {
+        try {
+            const options = {
+                method: 'delete',
+                body: JSON.stringify({ id: book?._id })
+            }
+            const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URI}/api/book`, options);
+
+            const data = await response.json();
+
+            if (response.status !== 200) {
+                return toast({
+                    variant: `subtle`,
+                    title: `There was an error`,
+                    description: data.message,
+                    status: `error`,
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
+            router.push('/', undefined, { shallow: true });
+            toast({
+                variant: `subtle`,
+                title: `Book Deleted`,
+                description: `${data.title} was deleted successfully :)`,
                 status: `success`,
                 duration: 5000,
                 isClosable: true,
@@ -167,7 +213,7 @@ export default function AdminOptions({
                 leftIcon={<ArrowBackIcon />}
                 variant="ghost"
                 colorScheme={process.env.COLOR_THEME}
-                onClick={() => router.push('/',  undefined, { shallow: true })}
+                onClick={() => router.push('/', undefined, { shallow: true })}
             >
                 Back to home
             </Button>
@@ -200,6 +246,9 @@ export default function AdminOptions({
                                     else if (restaurant) {
                                         return handleRestaurantDelete();
                                     }
+                                    else if (book) {
+                                        return handleBookDelete();
+                                    }
                                 }}
                                 ml={3}
                             >
@@ -210,7 +259,7 @@ export default function AdminOptions({
                 </AlertDialogOverlay>
             </AlertDialog>
             {
-                (movie || restaurant) &&
+                (movie || restaurant || book) &&
                 <Menu>
                     <MenuButton
                         as={IconButton}
@@ -227,10 +276,13 @@ export default function AdminOptions({
                                 else if (restaurant) {
                                     setModalRestaurant(restaurant)
                                 }
+                                else if (book) {
+                                    setModalBook(book);
+                                }
                                 return reviewOnOpen();
                             }}
                             icon={
-                                (movie && !movie.reviews.find((rvw) => rvw.user?._id === user.sub)) || (restaurant && !restaurant.reviews.find((rvw) => rvw.user?._id === user.sub))? (
+                                (movie && !movie.reviews.find((rvw) => rvw.user?._id === user.sub)) || (restaurant && !restaurant.reviews.find((rvw) => rvw.user?._id === user.sub)) || (book && !book.reviews.find((rvw) => rvw.user?._id === user.sub)) ? (
                                     <AddIcon />
                                 ) : (
                                     <EditIcon />
@@ -238,21 +290,32 @@ export default function AdminOptions({
                             }
                         >
                             {(movie && !movie.reviews.find((rvw) => rvw.user?._id === user.sub)) ||
-                                (restaurant && !restaurant.reviews.find((rvw) => rvw.user?._id === user.sub))
+                                (restaurant && !restaurant.reviews.find((rvw) => rvw.user?._id === user.sub)) ||
+                                (book && !book.reviews.find((rvw) => rvw.user?._id === user.sub))
                                 ? 'Add Review'
                                 : 'Edit Review'}
                         </MenuItem>
                         <MenuItem
                             onClick={() => {
+                                let description = 'Link';
+                                if (movie) {
+                                    description = movie?.name;
+                                }
+                                else if (restaurant) {
+                                    description = restaurant?.name;
+                                }
+                                else if (book) {
+                                    description = book?.title;
+                                }
                                 toast({
                                     variant: 'subtle',
                                     title: 'Copied to clipboard',
-                                    description: `${movie ? movie?.name : restaurant?.name} copied to clipboard`,
+                                    description: `${description} copied to clipboard`,
                                     isClosable: true,
                                     duration: 5000,
                                     status: 'success',
                                 });
-                                if(movie){
+                                if (movie) {
                                     navigator.clipboard.writeText(
                                         `${process.env.NEXT_PUBLIC_APP_URI}/movie/${movie?._id}`
                                     );
@@ -260,6 +323,11 @@ export default function AdminOptions({
                                 else if (restaurant) {
                                     navigator.clipboard.writeText(
                                         `${process.env.NEXT_PUBLIC_APP_URI}/restaurant/${restaurant?._id}`
+                                    );
+                                }
+                                else if (book) {
+                                    navigator.clipboard.writeText(
+                                        `${process.env.NEXT_PUBLIC_APP_URI}/book/${book?._id}`
                                     );
                                 }
                             }}

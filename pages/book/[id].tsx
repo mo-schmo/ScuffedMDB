@@ -47,9 +47,8 @@ export default function BookPage({ error }: BookPageProps): any {
         <AppLayout user={user} showMovies>
             <NextSeo title={data.title} />
             <BookDetails book={data} user={user}/>
-            {/* <RestaurantDetails restaurant={data} user={user} /> */}
-            {/* <ReviewSection restaurant={data} /> */}
-            {/* <ReviewModal user={session?.user} showReviewButton={false} /> */}
+            <ReviewSection book={data} />
+            <ReviewModal user={session?.user} showReviewButton={false} />
         </AppLayout>
     )
 }
