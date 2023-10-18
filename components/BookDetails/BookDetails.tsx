@@ -22,7 +22,8 @@ import {
   useColorModeValue,
   Skeleton,
   Container,
-  Collapse
+  Collapse,
+  HStack
 } from '@chakra-ui/react';
 import { IoChevronDown, IoLocationOutline } from 'react-icons/io5';
 import { FaYelp, FaStar, FaRegStar, FaStarHalfAlt } from 'react-icons/fa';
@@ -39,7 +40,7 @@ import Link from 'next/link';
 import { BiLeftArrowAlt, BiRightArrowAlt } from 'react-icons/bi'
 import { ReviewType, SerializedBookType } from 'models/book';
 import { format } from 'date-fns';
-import { OpenLibSchema } from 'models/api/books/openLibrarySchema';
+import { OpenLibSchema, RatingSchema } from 'models/api/books/openLibrarySchema';
 
 
 
@@ -54,6 +55,7 @@ export default function BookDetails({ book, user }: Props): any {
   const [isLargerThan800] = useMediaQuery('(min-width: 800px)');
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [openlibData, setOpenlibData] = useState<OpenLibSchema | undefined | null>();
+  const [openlibRating, setOpenlibRating] = useState<RatingSchema | undefined | null>();
   const { scrollPosition } = useScrollPosition();
 
   const [show, setShow] = useState(false)
@@ -61,7 +63,16 @@ export default function BookDetails({ book, user }: Props): any {
   const handleToggle = () => setShow(!show)
 
   const getShorterText = () => {
-    return book.description;
+    return new DOMParser().parseFromString(book?.textSnippet ?? book.description, 'text/html').body.textContent;
+  }
+
+  function toTitleCase(str) {
+    return str.replace(
+      /\w\S*/g,
+      function (txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+      }
+    );
   }
 
   useEffect(() => {
@@ -69,10 +80,20 @@ export default function BookDetails({ book, user }: Props): any {
       const url = `${process.env.NEXT_PUBLIC_APP_URI}/api/book/openlibrary?isbn=${book?.isbn}`
       fetch(url).then(res => res.json()).then(data => setOpenlibData(data)).catch(_ => setOpenlibData(null));
     }
+    if (book?.openlibraryId) {
+      const url = `https://openlibrary.org/works/${book?.openlibraryId}/ratings.json`;
+      fetch(url).then(res => {
+        if (res.status === 200) {
+          res.json();
+        }
+        return null;
+      }
+      ).then(data => setOpenlibRating(data)).catch(_ => setOpenlibRating(null));
+    }
   }, []);
 
   return (
-    <Flex maxWidth="7xl" mx={'auto'} mt="10px">
+    <Flex mt="10px">
       <Flex
         direction="column"
         width="full"
@@ -93,7 +114,7 @@ export default function BookDetails({ book, user }: Props): any {
             direction="column"
             alignItems="center"
             position="absolute"
-            bottom={'60px'}
+            bottom={'10px'}
             left={'50%'}
             transform={'translateX(-50%)'}
             color={'gray.500'}
@@ -112,12 +133,14 @@ export default function BookDetails({ book, user }: Props): any {
           </Flex>
         )}
         <Box minHeight="calc(100vh - 80px)">
-          <AdminOptions user={user} book={book} />
+          <div className='mx-5'>
+            <AdminOptions user={user} book={book} />
+          </div>
           <Flex direction={{ base: 'column', lg: 'row' }}>
             <Flex
               width={{ base: '90%', lg: '50%' }}
               mx="auto"
-              maxWidth="full"
+              maxWidth={{ base: "full", 'xl': "500px" }}
               alignItems='flex-start'
               pr={{ base: 0, lg: '20px' }}
             >
@@ -128,7 +151,7 @@ export default function BookDetails({ book, user }: Props): any {
               >
                 <Skeleton borderRadius="xl" isLoaded={isImageLoaded}>
                   {
-                    !book?.imageUrl ?
+                    (!book?.googleImageUrl && !book?.openlibImageUrl) ?
                       <Image
                         className={'borderRadius-xl'}
                         src={'/no_image.jpg'}
@@ -140,7 +163,7 @@ export default function BookDetails({ book, user }: Props): any {
                       :
                       <Image
                         className={'borderRadius-xl'}
-                        src={book?.imageUrl}
+                        src={book?.openlibImageUrl ?? book?.googleImageUrl}
                         alt={`${book?.title} cover`}
                         sizes={'50vw'}
                         layout="fill"
@@ -152,7 +175,7 @@ export default function BookDetails({ book, user }: Props): any {
               </AspectRatio>
             </Flex>
             <VStack
-              mx="auto"
+              mx={{ base: "auto" }}
               pl={{ base: 0, lg: '20px' }}
               alignItems="flex-start"
               maxWidth={{ base: '90%', lg: '50%' }}
@@ -165,7 +188,7 @@ export default function BookDetails({ book, user }: Props): any {
                       key={i.toString()}
                       colorScheme={getColorSchemeCharCode(subject)}
                     >
-                      <TagLabel fontWeight={'600'}> {subject}</TagLabel>
+                      <TagLabel fontWeight={'600'}> {toTitleCase(subject)}</TagLabel>
                     </Tag>
                   );
                 })}
@@ -180,32 +203,42 @@ export default function BookDetails({ book, user }: Props): any {
               >
                 {book?.title}
               </Heading>
-              <Text
-                fontSize="lg"
-                fontStyle="italic"
-                color={'gray.500'}
-                fontWeight="bold"
-              >
-                {book?.authors?.[0]}
-              </Text>
-              <Collapse startingHeight={200} in={show}>
-                <Container fontSize="lg" p={0}>{getShorterText()}</Container>
-              </Collapse>
-              <Flex alignItems='center'>
-                <Button size='sm' onClick={handleToggle} variant='unstyled' className='font-bold hover:underline'>
-                  Show {show ? 'Less' : 'More'}
-                </Button>
-                {
-                  show && <ChevronDownIcon className='rotate-180' boxSize={5} />
-                }
-                {
-                  !show && <ChevronDownIcon boxSize={5} />
-                }
-              </Flex>
+              <Link href={openlibData?.authors?.[0]?.url ?? '#'} passHref target="_blank">
+                <Text
+                  fontSize="lg"
+                  fontStyle="italic"
+                  color={'gray.500'}
+                  fontWeight="bold"
+                >
+                  by <span className='underline'>{book?.authors?.[0]}</span>
+                </Text>
+              </Link>
+              {
+                openlibRating ? (
+                  <HStack>
+                    <StarRating rating={openlibRating?.summary?.average} />
+                    <Text color={'gray.500'} fontSize={'sm'}>{openlibRating?.summary?.average}</Text>
+                    <Text color={'gray.500'} fontSize={'sm'}>({openlibRating?.summary?.count} reviews)</Text>
+                  </HStack>
+                ) :
+                  (
+                    <>
+                      {
+                        book?.ratingsCount > 0 &&
+                        <HStack>
+                          <StarRating rating={book?.averageRating} />
+                          <Text color={'gray.500'} fontSize={'sm'}>{book?.averageRatinge}</Text>
+                          <Text color={'gray.500'} fontSize={'sm'}>({book?.ratingsCount} reviews)</Text>
+                        </HStack>
+                      }
+                    </>
+                  )
+              }
+              <Container fontSize="lg" p={0}>{getShorterText()}</Container>
               <Flex
                 justifyContent="start"
                 width="full"
-                mt={{ base: '20px!important', lg: 'auto!important' }}
+                mt={{ base: '20px!important', lg: '20px!important' }}
               >
                 {
                   book?.publishedDate &&

@@ -14,8 +14,8 @@ export interface OpenLibSchema {
     subject_places?: Subject[],
     subject_people?: Subject[],
     excerpts?: Excerpt[],
-    links?: Link[]
-
+    links?: Link[],
+    cover?: Cover
 }
 
 
@@ -59,4 +59,15 @@ interface Cover {
     small: string,
     medium: string,
     large: string
+}
+
+export interface RatingSchema {
+    summary: Summary,
+    counts?: object
+}
+
+interface Summary {
+    average?: number,
+    count?: number,
+    sortable?: number
 }

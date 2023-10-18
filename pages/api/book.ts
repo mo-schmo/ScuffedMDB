@@ -55,7 +55,7 @@ const handler = async (
                 textSnippet: googleData?.searchInfo?.textSnippet,
                 pageCount: googleData?.volumeInfo?.pageCount,
                 publishedDate: googleData?.volumeInfo?.publishedDate,
-                imageUrl: googleData?.volumeInfo?.imageLinks?.thumbnail,
+                googleImageUrl: googleData?.volumeInfo?.imageLinks?.thumbnail,
                 averageRating: googleData?.volumeInfo?.averageRating,
                 ratingsCount: googleData?.volumeInfo?.ratingsCount,
                 rating: 0,
@@ -66,8 +66,10 @@ const handler = async (
             if (openlibData) {
                 newBook = {
                     ...newBook,
+                    openlibImageUrl: openlibData?.cover?.large,
                     openlibraryKey: openlibData?.key,
                     openlibraryUrl: openlibData?.url,
+                    openlibraryId: openlibData?.identifiers?.openlibrary?.[0],
                     goodreadsId: openlibData?.identifiers?.goodreads?.[0],
                     amazonId: openlibData?.identifiers?.amazon?.[0],
                     subjects: openlibData?.subjects?.map(subject => subject.name),

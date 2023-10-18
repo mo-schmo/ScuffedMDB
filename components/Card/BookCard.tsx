@@ -14,7 +14,8 @@ import {
     Heading,
     Button,
     Container,
-    Collapse
+    Collapse,
+    AspectRatio
 } from '@chakra-ui/react';
 import Link from 'next/link';
 import Rating from '../Rating';
@@ -39,7 +40,7 @@ export const BookCard: React.FC<CardProps> = ({
     const handleToggle = () => setShow(!show)
 
     useEffect(() => {
-        setImage(book?.imageUrl);
+        setImage(book?.openlibImageUrl ?? book?.googleImageUrl);
         setViewLoaded(true);
     }, [book])
 
@@ -50,6 +51,11 @@ export const BookCard: React.FC<CardProps> = ({
                 return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
             }
         );
+    }
+
+    function getCardDescription(book :  SerializedBookType<ReviewType<PopulatedUserType>[]>){
+        const text = book?.textSnippet ?? book?.description;
+        return new DOMParser().parseFromString(text, 'text/html').body.textContent;
     }
 
     return (
@@ -77,17 +83,19 @@ export const BookCard: React.FC<CardProps> = ({
                     onClick={handleToggle}
                 >
                     <Box mt={-6} mx={-6} mb={6} pos="relative">
-                        <Skeleton isLoaded={isImageLoaded}>
-                            <Image
-                                src={image ? image : `/svg/logo-no-background-${process.env.COLOR_THEME}.svg`}
-                                width="0"
-                                onLoad={() => setIsImageLoaded(true)}
-                                sizes="(max-width: 2561px) 400px"
-                                height="0"
-                                alt={`${book?.title} cover`}
-                                className="w-[400px] h-[225px] object-contain"
-                            />
-                        </Skeleton>
+                        <AspectRatio maxW='400px' ratio={4 / 3}>
+                            <Skeleton isLoaded={isImageLoaded}>
+                                <Image
+                                    src={image ? image : `/no_image.jpg`}
+                                    width="0"
+                                    onLoad={() => setIsImageLoaded(true)}
+                                    sizes="(max-width: 2561px) 400px"
+                                    height="0"
+                                    alt={`${book?.title} cover`}
+                                    className="w-[400px] h-[225px] object-contain"
+                                />
+                            </Skeleton>
+                        </AspectRatio>
                     </Box>
                     {
                         !show &&
@@ -148,7 +156,7 @@ export const BookCard: React.FC<CardProps> = ({
                     <Collapse in={show} className='items-center'>
                         <Flex direction={'column'}>
                             <Container centerContent fontSize={'sm'} noOfLines={8}>
-                                {book?.textSnippet ?? book?.description}
+                                { getCardDescription(book) }
                             </Container>
                         </Flex>
                     </Collapse>

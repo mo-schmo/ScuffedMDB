@@ -147,7 +147,8 @@ function BookSearchResult({ data, loading, setSuccess, setError, onClose }: any)
                 onClose();
             }
             else {
-                setError("Unable to add book. Try again later");
+                const data = await response.json();
+                setError(data?.message);
             }
         }
         catch {

@@ -23,6 +23,7 @@ const bookSchema = new mongoose.Schema(
         googleLink: {type: String}, //google
         openlibraryKey: {type: String}, //openlib
         openlibraryUrl: {type: String}, //openlib
+        openlibraryId: {type: String}, //openlib
         goodreadsId: {type: String}, //openlib
         amazonId: {type: String}, //openlib
         authors: [{ type: String }], //google
@@ -32,7 +33,8 @@ const bookSchema = new mongoose.Schema(
         textSnippet: {type: String},
         pageCount: {type: Number}, //google
         publishedDate: {type: String}, //google
-        imageUrl: {type: String}, //google
+        googleImageUrl: {type: String}, //google
+        openlibImageUrl: {type: String}, //openlib
         averageRating: {type: Number}, //google
         ratingsCount: {type: Number}, //google
         rating: { type: Number },
@@ -62,6 +64,7 @@ export interface BookType<T = ReviewType[]> extends Document {
     googleLink?: string,
     openlibraryKey?: string,
     openlibraryUrl?: string,
+    openlibraryId?: string,
     goodreadsId?: string,
     amazonId?: string,
     authors?: string[],
@@ -71,7 +74,8 @@ export interface BookType<T = ReviewType[]> extends Document {
     textSnippet?: string,
     pageCount?: number,
     publishedDate?: string,
-    imageUrl?: string,
+    googleImageUrl?: string,
+    openlibImageUrl?: string,
     averageRating?: number,
     ratingsCount?: number,
     numReviews?: number,
