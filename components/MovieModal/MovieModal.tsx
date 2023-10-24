@@ -181,6 +181,16 @@ export const MovieModal: React.FC<{ inMobileNav?: boolean }> = ({
           >
             Add Restaurant
           </Button>
+          <Button
+            variant="ghost"
+            width="95%"
+            mx="auto"
+            mt={2}
+            leftIcon={<AddIcon />}
+            onClick={onBookOpen}
+          >
+            Add Book
+          </Button>
         </>
       ) : (
         <Menu>

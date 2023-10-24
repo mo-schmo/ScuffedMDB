@@ -174,6 +174,7 @@ function BookSearchResult({ data, loading, setSuccess, setError, onClose }: any)
                     key={index.toString()}
                     justifyContent="stretch"
                     p={5}
+                    m={1}
                     shadow="md"
                     borderWidth="1px"
                     borderRadius={10}

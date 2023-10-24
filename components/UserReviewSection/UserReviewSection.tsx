@@ -57,8 +57,8 @@ export const UserReviewSection: React.FC<{
     else if (item?.alias && item?.image_url){
       return item.image_url;
     }
-    else if (item?.title && item?.imageUrl){
-      return item.imageUrl;
+    else if (item?.title){
+      return item?.openlibImageUrl ?? item?.googleImageUrl;
     }
     return '';
   }

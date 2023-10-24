@@ -23,11 +23,11 @@ import {
   Skeleton,
   Container,
   Collapse,
-  HStack
+  HStack,
+  Center
 } from '@chakra-ui/react';
-import { IoChevronDown, IoLocationOutline } from 'react-icons/io5';
-import { FaYelp, FaStar, FaRegStar, FaStarHalfAlt } from 'react-icons/fa';
-import React, { ReactElement, useContext, useState, useEffect } from 'react';
+import { IoChevronDown } from 'react-icons/io5';
+import React, { useState, useEffect } from 'react';
 import { PopulatedUserType } from 'models/user';
 import { UserAuthType } from 'next-auth';
 import useScrollPosition from 'hooks/useScrollPosition.hook';
@@ -37,10 +37,11 @@ import AdminOptions from 'components/AdminOptions';
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { StarRating } from '@components/Rating/Rating';
 import Link from 'next/link';
-import { BiLeftArrowAlt, BiRightArrowAlt } from 'react-icons/bi'
 import { ReviewType, SerializedBookType } from 'models/book';
 import { format } from 'date-fns';
 import { OpenLibSchema, RatingSchema } from 'models/api/books/openLibrarySchema';
+import { FcGoogle } from "react-icons/fc";
+import { FaAmazon, FaGoodreadsG } from "react-icons/fa";
 
 
 
@@ -63,7 +64,7 @@ export default function BookDetails({ book, user }: Props): any {
   const handleToggle = () => setShow(!show)
 
   const getShorterText = () => {
-    return new DOMParser().parseFromString(book?.textSnippet ?? book.description, 'text/html').body.textContent;
+    return new DOMParser().parseFromString(book.description, 'text/html').body.textContent;
   }
 
   function toTitleCase(str) {
@@ -73,6 +74,19 @@ export default function BookDetails({ book, user }: Props): any {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
       }
     );
+  }
+
+  function getHeightOfElement() {
+    let box = document.querySelector('#details-description');
+    const height = box?.offsetHeight ?? 50;
+    if (height > 1000) {
+      return height / 4;
+    }
+    else if (height > 200) {
+      return height / 2;
+    }
+
+    return -1;
   }
 
   useEffect(() => {
@@ -234,7 +248,30 @@ export default function BookDetails({ book, user }: Props): any {
                     </>
                   )
               }
-              <Container fontSize="lg" p={0}>{getShorterText()}</Container>
+              {
+                getHeightOfElement() >= 0 ?
+                  (
+                    <>
+                      <Collapse startingHeight={200} in={show}>
+                        <Container id='details-description' fontSize="lg" p={0}>{getShorterText()}</Container>
+                      </Collapse>
+                      <Flex alignItems='center'>
+                        <Button size='sm' onClick={handleToggle} variant='unstyled' className='font-bold hover:underline'>
+                          Show {show ? 'Less' : 'More'}
+                        </Button>
+                        {
+                          show && <ChevronDownIcon className='rotate-180' boxSize={5} />
+                        }
+                        {
+                          !show && <ChevronDownIcon boxSize={5} />
+                        }
+                      </Flex>
+                    </>
+                  ) :
+                  (
+                    <Container id='details-description' fontSize="lg" p={0}>{getShorterText()}</Container>
+                  )
+              }
               <Flex
                 justifyContent="start"
                 width="full"
@@ -260,33 +297,110 @@ export default function BookDetails({ book, user }: Props): any {
                   </Text>
                 </VStack>
               </Flex>
+              <HStack spacing={5} wrap={'wrap'} className='invisible md:visible'>
+                {
+                  book?.googleLink &&
+                  <Link href={book?.googleLink} passHref target="_blank">
+                    <Icon as={FcGoogle} boxSize={50} />
+                  </Link>
+                }
+                {
+                  book?.openlibraryUrl &&
+                  <Link href={book?.openlibraryUrl} passHref target="_blank">
+                    <Image
+                      src="/svg/openlib.svg"
+                      width={150}
+                      height={150}
+                      alt="Picture of the author"
+                    />
+                  </Link>
+                }
+                {
+                  openlibData?.identifiers?.goodreads?.[0] &&
+                  <Link href={`https://goodreads.com/book/show/${openlibData?.identifiers?.goodreads?.[0]}`} passHref target="_blank">
+                    <Icon as={FaGoodreadsG} boxSize={50} />
+                  </Link>
+                }
+                {
+                  openlibData?.identifiers?.amazon?.[0] &&
+                  <Link href={`https://www.amazon.com/dp/${openlibData?.identifiers?.amazon?.[0]}`} passHref target="_blank">
+                    <Icon as={FcGoogle} boxSize={50} />
+                  </Link>
+                }
+              </HStack>
             </VStack>
           </Flex>
+          <StatGroup
+            flexDirection={{ base: 'column' }}
+            alignItems="stretch"
+            justifyContent="space-between"
+            width="full"
+            textAlign="center"
+            mt={0}
+            className='visible md:invisible'
+          >
+            {
+              book?.googleLink &&
+              <Stat my={5}>
+                <StatLabel color={'gray.500'} fontSize="lg">
+                  View on Google
+                </StatLabel>
+                <StatNumber fontSize="5xl" fontWeight="bold">
+                  <Link href={book?.googleLink} passHref target="_blank">
+                    <Icon as={FcGoogle} boxSize={50} />
+                  </Link>
+                </StatNumber>
+              </Stat>
+            }
+            {
+              book?.openlibraryUrl &&
+              <Stat my={5}>
+                <StatLabel color={'gray.500'} fontSize="lg">
+                  View on OpenLib
+                </StatLabel>
+                <StatNumber fontSize="5xl" fontWeight="bold" mt={5}>
+                  <Center>
+                    <Link href={book?.openlibraryUrl} passHref target="_blank" className='text-center'>
+                      <Image
+                        src="/svg/openlib.svg"
+                        width={150}
+                        height={150}
+                        alt="Picture of the author"
+                      />
+                    </Link>
+                  </Center>
+                </StatNumber>
+              </Stat>
+            }
+            {
+              openlibData?.identifiers?.goodreads?.[0] &&
+              <Stat my={5}>
+                <StatLabel color={'gray.500'} fontSize="lg">
+                  View on GoodReads
+                </StatLabel>
+                <StatNumber fontSize="5xl" fontWeight="bold">
+                  <Link href={`https://goodreads.com/book/show/${openlibData?.identifiers?.goodreads?.[0]}`} passHref target="_blank">
+                    <Icon as={FaGoodreadsG} boxSize={50} />
+                  </Link>
+                </StatNumber>
+              </Stat>
+            }
+            {
+              openlibData?.identifiers?.amazon?.[0] &&
+              <Stat my={5}>
+                <StatLabel color={'gray.500'} fontSize="lg">
+                  View on Amazon
+                </StatLabel>
+                <StatNumber fontSize="5xl" fontWeight="bold">
+                  <Link href={`https://www.amazon.com/dp/${openlibData?.identifiers?.amazon?.[0]}`} passHref target="_blank">
+                    <Icon as={FcGoogle} boxSize={50} />
+                  </Link>
+                </StatNumber>
+              </Stat>
+            }
+          </StatGroup>
         </Box>
       </Flex>
     </Flex>
   )
-}
-
-function SkeletonImage({ image }: { image: string }) {
-  useEffect(() => {
-    if (image && image.length > 0) {
-      setImageUrl(image)
-    }
-  })
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageUrl, setImageUrl] = useState('/no_image.jpg');
-  return (
-    <Skeleton borderRadius="xl" isLoaded={imageLoaded}>
-      <Image
-        onLoad={() => setImageLoaded(true)}
-        onError={() => setImageUrl('/no_image.jpg')}
-        src={imageUrl}
-        alt={`restaurant Image`}
-        objectFit='contain'
-        sizes={'100vw'}
-        layout='fill'
-      />
-    </Skeleton>
-  );
 }

@@ -471,7 +471,7 @@ export const ReviewModal: React.FC<{
                       }
                       return setComment(e.target.value);
                     }}
-                    placeholder="This movie/restaurant was great because it was..."
+                    placeholder="I really enjoyed this because..."
                     resize="vertical"
                   />
                 </>

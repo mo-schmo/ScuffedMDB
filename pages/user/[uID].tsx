@@ -102,7 +102,7 @@ function EditUser({ desiredUser, ...props }: EditUserProps): React.ReactNode {
       rev.item = {
         _id: book._id,
         name: book.title,
-        image: book.imageUrl,
+        image: book.openlibImageUrl ?? book.googleImageUrl,
       };
       return rev;
     })
