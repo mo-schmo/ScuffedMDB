@@ -157,6 +157,14 @@ export const getServerSideProps = async (
       },
     }
   };
+  if (ctx.query.book) {
+    return {
+      redirect: {
+        destination: `/book/${ctx.query.book}${ctx.query.review === 'true' ? '?review=true' : ''}`,
+        permanent: false
+      },
+    }
+  };
   if (ctx.query.user) {
     return {
       redirect: {
