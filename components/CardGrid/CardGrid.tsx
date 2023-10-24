@@ -489,39 +489,15 @@ export const CardGrid: React.FC<CardGridProps> = ({
             justifyContent="center"
             alignItems="center"
           >
-            {
-              view === 'books' ?
-                <VStack spacing={40}>
-                  <Heading fontWeight="extrabold"
-                    color={
-                      colorMode === 'light' ? 'rgba(0, 0, 0, 0.25)' : 'whiteAlpha.300'
-                    }>
-                    Books coming soon...
-                  </Heading>
-                  <IconButton
-                    className='animate-pulse'
-                    variant='transparent'
-                    aria-label='Bookshelf'
-                    fontSize={{
-                      base: '50vw',
-                      md: '200px'
-                    }}
-                    size='lg'
-                    color={colorMode === 'light' ? `${process.env.COLOR_THEME}.500` : process.env.COLOR_THEME}
-                    icon={<GiBookshelf />}
-                  />
-                </VStack>
-                :
-                <Heading
-                  size={{ base: 'xl', md: '2xl', lg: '4xl' }[bp || 'base']}
-                  fontWeight="extrabold"
-                  color={
-                    colorMode === 'light' ? 'rgba(0, 0, 0, 0.25)' : 'whiteAlpha.300'
-                  }
-                >
-                  To get started add a movie/restaurant.
-                </Heading>
-            }
+            <Heading
+              size={{ base: 'xl', md: '2xl', lg: '4xl' }[bp || 'base']}
+              fontWeight="extrabold"
+              color={
+                colorMode === 'light' ? 'rgba(0, 0, 0, 0.25)' : 'whiteAlpha.300'
+              }
+            >
+              To get started add a {view?.slice(0, -1) ?? 'item'} to review.
+            </Heading>
           </Flex>
         )}
       </Container>
