@@ -78,7 +78,7 @@ export const ModalHub: React.FC<{ inMobileNav?: boolean, isHubOpen?: any, onHubO
       else if (success?.type === 'addition' && success?.category === 'restaurant') {
         queryClient.invalidateQueries({ queryKey: [`restaurants`] });
       }
-      else if (success?.type === 'addition' && success?.category === 'books') {
+      else if (success?.type === 'addition' && success?.category === 'book') {
         queryClient.invalidateQueries({ queryKey: [`books`] });
       }
       else {
@@ -86,13 +86,24 @@ export const ModalHub: React.FC<{ inMobileNav?: boolean, isHubOpen?: any, onHubO
         queryClient.invalidateQueries({ queryKey: [`restaurants`] });
         queryClient.invalidateQueries({ queryKey: [`books`] });
       }
+
+      let toastHeader = 'Item'
+      if (success?.category === 'movie') {
+        toastHeader = 'Movie';
+      }
+      else if (success?.category === 'restaurant') {
+        toastHeader = 'Restaurant';
+      }
+      else if (success?.category === 'book') {
+        toastHeader = 'Book';
+      }
       toast({
         variant: `subtle`,
-        title: success.type === `addition` ? `${success.data?.alias ? 'Restaurant' : 'Movie'} Added` : `${success.data?.alias ? 'Restaurant' : 'Movie'} Deleted`,
+        title: success.type === `addition` ? `${toastHeader} Added` : `${toastHeader} Deleted`,
         description:
           success.type === `addition`
-            ? `${success.data?.name} was successfully added`
-            : `${success.data?.name} was successfully deleted`,
+            ? `${success.data?.name ?? success.data?.title} was successfully added`
+            : `${success.data?.name ?? success.data?.title} was successfully deleted`,
         status: `success`,
         duration: 5000,
         isClosable: true,
@@ -120,20 +131,22 @@ export const ModalHub: React.FC<{ inMobileNav?: boolean, isHubOpen?: any, onHubO
 
   return (
     <>
-      <Menu>
-        <MenuButton
-          as={IconButton}
-          aria-label='Options'
-          icon={<AddIcon />} variant='ghost'
-        >
-          Open menu
-        </MenuButton>
-        <MenuList>
-          <MenuItem onClick={onOpen}>Add Movie</MenuItem>
-          <MenuItem onClick={onRestaurantOpen}>Add Restaurant</MenuItem>
-          <MenuItem onClick={onBookOpen}>Add Book</MenuItem>
-        </MenuList>
-      </Menu>
+      {!inMobileNav &&
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label='Options'
+            icon={<AddIcon />} variant='ghost'
+          >
+            Open menu
+          </MenuButton>
+          <MenuList>
+            <MenuItem onClick={onOpen}>Add Movie</MenuItem>
+            <MenuItem onClick={onRestaurantOpen}>Add Restaurant</MenuItem>
+            <MenuItem onClick={onBookOpen}>Add Book</MenuItem>
+          </MenuList>
+        </Menu>
+      }
       <Modal isOpen={isHubOpen} onClose={onHubClose}>
         <ModalOverlay />
         <ModalContent>
