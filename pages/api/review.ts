@@ -6,6 +6,7 @@ import Movie, { MovieType, ReviewType } from '../../models/movie';
 import Restaurant, { RestaurantType } from 'models/restaurant';
 import dbConnect from '../../utils/dbConnect';
 import { ReviewEndpointBodyType } from '../../types/APITypes';
+import Book, { BookType } from 'models/book';
 
 const addMovieReview = async (review: any, movieID: any, session: any, res: any) => {
   const movie: MovieType<ReviewType<string>[]> = await Movie.findOne({
@@ -46,7 +47,7 @@ const addMovieReview = async (review: any, movieID: any, session: any, res: any)
   await movie.save();
   return res
     .status(200)
-    .json({ movie, type: existingReview ? `modification` : `addition` });
+    .json({ movie, type: existingReview ? `modification` : `addition`, label: movie?.name });
 }
 
 const addRestaurantReview = async (review: any, restaurantID: any, session: any, res: any) => {
@@ -88,16 +89,57 @@ const addRestaurantReview = async (review: any, restaurantID: any, session: any,
   await restaurant.save();
   return res
     .status(200)
-    .json({ restaurant, type: existingReview ? `modification` : `addition` });
+    .json({ restaurant, type: existingReview ? `modification` : `addition`, label: restaurant?.name });
 }
 
+const addBookReview = async (review: any, bookID: any, session: any, res: any) => {
+  const book: BookType<ReviewType<string>[]> = await Book.findOne({
+    _id: bookID,
+  });
+
+  if (!book) {
+    return res.status(404).json({ message: 'book not found' });;
+  }
+  const existingReview = book?.reviews.filter(
+    // eslint-disable-next-line no-underscore-dangle
+    (rv) =>
+      [session?.user?._id, session?.user?.sub].includes(rv.user.toString())
+  )[0];
+  if (existingReview) {
+    if (
+      ![session?.user?._id, session?.user?.sub].includes(
+        existingReview.user.toString()
+      )
+    ) {
+      return res.status(400).json({
+        message: `You may not edit a review that is not your own`,
+      });
+    }
+    const index = book?.reviews.indexOf(existingReview);
+    book?.reviews.splice(index, 1);
+  }
+  //@ts-ignore
+  book.reviews.push(review);
+  book.numReviews = book?.reviews.length;
+  book.rating =
+    Math.round(
+      (book?.reviews.reduce<number>((a, b) => a + b.rating, 0) /
+        book?.reviews.length) *
+      10
+    ) / 10;
+  book.markModified(`reviews`);
+  await book.save();
+  return res
+    .status(200)
+    .json({ book, type: existingReview ? `modification` : `addition`, label: book?.title });
+}
 const handler = async (
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void | NextApiResponse<any>> => {
   await dbConnect();
   if (req.method === `POST`) {
-    const { comment, rating, movieID, restaurantID }: ReviewEndpointBodyType = JSON.parse(
+    const { comment, rating, movieID, restaurantID, bookID }: ReviewEndpointBodyType = JSON.parse(
       req.body
     );
     try {
@@ -107,31 +149,30 @@ const handler = async (
           .status(401)
           .json({ message: `You are not authorized to do that :(` });
       }
+      const review = {
+        // eslint-disable-next-line no-underscore-dangle
+        user: session.user._id || session.user.sub,
+        comment,
+        rating,
+      };
       if (movieID) {
-        const review = {
-          // eslint-disable-next-line no-underscore-dangle
-          user: session.user._id || session.user.sub,
-          comment,
-          rating,
-        };
-
         await addMovieReview(review, movieID, session, res);
       }
       else if (restaurantID) {
-        const review = {
-          // eslint-disable-next-line no-underscore-dangle
-          user: session.user._id || session.user.sub,
-          comment,
-          rating,
-        }
         await addRestaurantReview(review, restaurantID, session, res);
+      }
+      else if (bookID) {
+        await addBookReview(review, bookID, session, res);
+      }
+      else {
+        res.status(204).json({ message: 'No content' });
       }
     } catch (err) {
       console.error(err);
       return res.status(500);
     }
   } else if (req.method === `DELETE`) {
-    const { movieID, restaurantID, reviewID } = JSON.parse(req.body);
+    const { movieID, restaurantID, reviewID, bookID } = JSON.parse(req.body);
     const session = await getSession({ req });
     if (!session?.user?.isAdmin && !session?.user?.isReviewer) {
       return res
@@ -212,6 +253,42 @@ const handler = async (
       restaurant.markModified(`reviews`);
 
       await restaurant.save();
+    }
+    else if (bookID) {
+      const book: BookType = await Book.findOne({ _id: bookID }).populate('reviews.user', '_id discord_id image username discriminator');
+      if (!book) {
+        return res.status(404).json({ message: 'book not found' });
+      }
+      const review = book.reviews.find(
+        (rvw) =>
+          rvw._id?.toString() === reviewID ||
+          rvw.user?._id?.toString() === session?.user?.id
+      );
+      if (!review) {
+        return res
+          .status(404)
+          .json({ message: 'You have not posted a review on that movie' });
+      }
+      if (
+        !session.user.isAdmin &&
+        review.user?._id.toString() !== session.user.id
+      ) {
+        return res
+          .status(401)
+          .json({ message: 'You do not have permissions to delete that review' });
+      }
+      book.reviews.splice(book.reviews.indexOf(review), 1);
+      book.numReviews = book.reviews.length;
+      book.rating = book.reviews.length
+        ? Math.round(
+          (book.reviews.reduce<number>((a, b) => a + b.rating, 0) /
+            book.reviews.length) *
+          10
+        ) / 10
+        : 0;
+      book.markModified(`reviews`);
+
+      await book.save();
     }
     return res.status(200).json({ message: `Review deleted` });
   } else {

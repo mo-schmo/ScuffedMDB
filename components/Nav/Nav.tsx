@@ -21,7 +21,7 @@ import {
   Collapse
 } from '@chakra-ui/react';
 import { transparentize } from '@chakra-ui/theme-tools';
-import { IoMoon, IoSunny, IoRestaurantOutline, IoHomeOutline, IoBookOutline } from 'react-icons/io5';
+import { IoMoon, IoSunny, IoRestaurantOutline, IoHomeOutline, IoBookOutline, IoAppsOutline, IoEllipsisVerticalOutline } from 'react-icons/io5';
 import { BiCameraMovie } from "react-icons/bi";
 import Link from 'next/link';
 import MovieModal from '../MovieModal';
@@ -33,6 +33,7 @@ import Router, { useRouter } from 'next/router';
 import Image from 'next/image';
 import { ViewContext } from 'utils/ViewContext';
 import { AddIcon } from '@chakra-ui/icons'
+import ModalHub from '@components/ModalHub';
 
 interface NavProps {
   user: UserAuthType;
@@ -122,6 +123,13 @@ export const Nav: React.FC<NavProps> = ({
               colorScheme={`${process.env.COLOR_THEME}`}
               variant='ghost'
             >Restaurants</Button>
+            <Button onClick={() => {
+              setView('books');
+              router.push('/', undefined, { shallow: true })
+            }}
+              colorScheme={`${process.env.COLOR_THEME}`}
+              variant='ghost'
+            >Books</Button>
           </HStack>
           <HStack align="center" spacing={'15px'} mx={4}>
             <IconButton
@@ -148,7 +156,7 @@ export const Nav: React.FC<NavProps> = ({
                 {user.isReviewer && showReview && (
                   <ReviewModal user={user} inNav />
                 )}
-                {user.isAdmin && showMovies && <MovieModal />}
+                {user.isAdmin && showMovies && <ModalHub />}
               </Stack>
             )}
 
@@ -217,6 +225,7 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
   const [show, setShow] = useState(false)
   const handleToggle = () => setShow(!show)
 
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
 
   return bp === 'mobile' ? (
@@ -279,7 +288,7 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
           );
         })}
         {user.isReviewer && <ReviewModal user={user} inMobileNav />}
-        {user.isAdmin && <MovieModal inMobileNav />}
+        {user.isAdmin && <ModalHub inMobileNav isHubOpen={isOpen} onHubOpen={onOpen} onHubClose={onClose} />}
         <chakra.hr
           width="95%"
           my={4}
@@ -303,7 +312,22 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
           Sign Out
         </Button>
       </Flex>
-      <Stack className="fixed bottom-20 right-6 z-[100] animate-[bounce_1s_5s]">
+      <Stack className="fixed bottom-20 right-6 z-[200] animate-[bounce_1s_5s]">
+        <IconButton
+          isRound={true}
+          variant='solid'
+          colorScheme={process.env.COLOR_THEME}
+          aria-label='Done'
+          fontSize='15px'
+          size='lg'
+          icon={<AddIcon />}
+          onClick={() => {
+            onOpen();
+          }
+          }
+        />
+      </Stack>
+      <Stack className="fixed bottom-[140px] right-6 z-[100] animate-[bounce_1s_5s]">
         {
           router.pathname !== '/' &&
           <IconButton
@@ -312,7 +336,7 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
             colorScheme={process.env.COLOR_THEME}
             aria-label='Done'
             fontSize='20px'
-            size='lg'
+            size='md'
             icon={<IoHomeOutline />}
             onClick={() => {
               if (router?.pathname.includes('restaurant')) {
@@ -337,7 +361,7 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
                   colorScheme={process.env.COLOR_THEME}
                   aria-label='Done'
                   fontSize='20px'
-                  size='md'
+                  size='sm'
                   icon={<BiCameraMovie />}
                   onClick={() => {
                     setView('movies');
@@ -349,7 +373,7 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
                   colorScheme={process.env.COLOR_THEME}
                   aria-label='Done'
                   fontSize='20px'
-                  size='md'
+                  size='sm'
                   icon={<IoRestaurantOutline />}
                   onClick={() => {
                     setView('restaurants');
@@ -361,7 +385,7 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
                   colorScheme={process.env.COLOR_THEME}
                   aria-label='Done'
                   fontSize='20px'
-                  size='md'
+                  size='sm'
                   icon={<IoBookOutline />}
                   onClick={() => {
                     setView('books');
@@ -376,8 +400,8 @@ const MobileNav = ({ links, user }: MobileNavProps): JSX.Element | null => {
               colorScheme={process.env.COLOR_THEME}
               aria-label='Done'
               fontSize='20px'
-              size='lg'
-              icon={<AddIcon />}
+              size='md'
+              icon={<IoAppsOutline />}
               onClick={handleToggle}
             />
           </>

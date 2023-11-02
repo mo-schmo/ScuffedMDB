@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import movie from '../models/movie';
 import user from '../models/user';
 import restaurant from 'models/restaurant';
+import book from 'models/book';
 
 
 
@@ -37,6 +38,10 @@ async function dbConnect() {
   if (!mongoose.models?.Restaurant) {
     restaurant.schema;
   }
+  if (!mongoose.models?.Book) {
+    book.schema;
+  }
+  
   if (cached.conn) {
     return cached.conn;
   }

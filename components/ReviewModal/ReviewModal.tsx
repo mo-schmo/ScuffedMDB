@@ -36,7 +36,7 @@ import { User } from 'next-auth';
 import { AiFillStar } from 'react-icons/ai';
 import { ReviewEndpointBodyType } from '../../types/APITypes';
 import { ReviewModalContext } from '../../utils/ModalContext';
-import { getMovies, getRestaurants } from '../../utils/queries';
+import { getMovies, getRestaurants, getBooks } from '../../utils/queries';
 
 export const ReviewModal: React.FC<{
   user: User;
@@ -45,23 +45,25 @@ export const ReviewModal: React.FC<{
   showReviewButton?: boolean;
 }> = ({ user, inNav = false, inMobileNav = false, showReviewButton = true }): React.ReactElement => {
   const { colorMode } = useColorMode();
-  const { isOpen, onOpen, onClose, movie, setMovie, restaurant, setRestaurant } = useContext(
+  const { isOpen, onOpen, onClose, movie, setMovie, restaurant, setRestaurant, book, setBook } = useContext(
     ReviewModalContext
   );
 
   const { data: movies } = useQuery([`movies`], () => getMovies());
   const { data: restaurants } = useQuery([`restaurants`], () => getRestaurants());
+  const { data: books } = useQuery(['books'], () => getBooks());
 
 
   const [isEditingReview, setIsEditingReview] = useState(false);
 
   const [isOpenedFromMovie, setIsOpenedFromMovie] = useState(false);
   const [isOpenedFromRestaurant, setIsOpenedFromRestaurant] = useState(false);
+  const [isOpenedFromBook, setIsOpenedFromBook] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState(``);
   const [commentError, setCommentError] = useState(``);
   const [selectionError, setselectionError] = useState(``);
-  const [success, setSuccess] = useState(``);
+  const [success, setSuccess] = useState(null);
   const [option, setOption] = useState('');
 
   const queryClient = useQueryClient();
@@ -76,20 +78,20 @@ export const ReviewModal: React.FC<{
       queryClient.invalidateQueries();
       toast({
         variant: `subtle`,
-        title: success === `addition` ? `Review Added` : `Review Modified`,
+        title: success?.type === `addition` ? `Review Added` : `Review Modified`,
         description:
-          success === `addition`
-            ? `Your review was successfully added to ${movie ? movie?.name : restaurant?.name}`
-            : `Your review on ${movie ? movie?.name : restaurant?.name} was successfully modified`,
+          success?.type === `addition`
+            ? `Your review was successfully added to ${success?.label}`
+            : `Your review on ${success?.label} was successfully modified`,
         status: `success`,
         duration: 5000,
         isClosable: true,
       });
-      setSuccess('');
+      setSuccess(null);
       setMovie(null);
       setRestaurant(null);
     }
-  }, [movie, queryClient, success, toast, restaurant]);
+  }, [movie, queryClient, success, toast, restaurant, book]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -99,6 +101,7 @@ export const ReviewModal: React.FC<{
       setOption('');
       setIsOpenedFromMovie(false);
       setIsOpenedFromRestaurant(false);
+      setIsOpenedFromBook(false);
       return;
     }
     if (movie) {
@@ -121,22 +124,37 @@ export const ReviewModal: React.FC<{
         return setComment(rvw?.comment || '');
       }
     }
+    if (book) {
+      const rvw = book?.reviews?.find((review) => {
+        return review?.user?._id === user.sub;
+      });
+      if (rvw) {
+        setIsEditingReview(true);
+        setRating(rvw.rating);
+        return setComment(rvw?.comment || '');
+      }
+    }
     setIsEditingReview(false);
     setRating(0);
     setComment(``);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [movie, isOpen, restaurant]);
+  }, [movie, isOpen, restaurant, book]);
 
   useEffect(() => {
     if (!isOpen) {
       setIsOpenedFromRestaurant(false);
-      return setIsOpenedFromMovie(false);
+      setIsOpenedFromMovie(false);
+      setIsOpenedFromBook(false);
+      return;
     }
     if (movie) {
       setIsOpenedFromMovie(true);
     }
     if (restaurant) {
       setIsOpenedFromRestaurant(true);
+    }
+    if (book) {
+      setIsOpenedFromBook(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -147,18 +165,22 @@ export const ReviewModal: React.FC<{
     onClose: () => void
   ) => {
     e.preventDefault();
-    if (!movie && !restaurant) {
+    if (!movie && !restaurant && !book) {
       if (!movie) {
         return setselectionError(`Please select a valid movie.`);
       }
       if (!restaurant) {
         return setselectionError('Please select a valid restaurant')
       }
+      if (!book) {
+        return setselectionError('Please select a valid book')
+      }
     }
     const data: ReviewEndpointBodyType = {
       // eslint-disable-next-line no-underscore-dangle
       movieID: movie?._id,
       restaurantID: restaurant?._id,
+      bookID: book?._id,
       comment,
       rating,
     };
@@ -169,7 +191,7 @@ export const ReviewModal: React.FC<{
 
     const successData = await res.json();
     if (res.status === 200) {
-      setSuccess(successData.type);
+      setSuccess(successData);
       setComment(``);
       return onClose();
     }
@@ -229,17 +251,14 @@ export const ReviewModal: React.FC<{
               maxWidth="85%"
               mr="auto"
             >
-              {isEditingReview && movie
-                ? `Editing review for ${movie?.name}`
-                : isOpenedFromMovie && movie
-                  ? `Add a review to ${movie?.name}`
-                  : 'Add a review'}
+              {isEditingReview
+                ? 'Editing review' : 'Add a review'}
             </Heading>
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
-              {(!isOpenedFromMovie && !isOpenedFromRestaurant) && (
+              {(!isOpenedFromMovie && !isOpenedFromRestaurant && !isOpenedFromBook) && (
                 <>
                   <FormLabel mb={3} fontSize="1.1em" fontWeight="semibold">
                     Select Option
@@ -248,14 +267,24 @@ export const ReviewModal: React.FC<{
                     bg={colorMode === 'light' ? 'white' : 'gray.700'}
                     onChange={(e) => {
                       e.preventDefault();
-                      if (e.target.value === 'restaurant' && movie) {
+                      if (e.target.value === 'restaurant') {
                         setMovie(null);
+                        setBook(null);
+                      }
+                      if (e.target.value === 'book') {
+                        setMovie(null);
+                        setRestaurant(null);
+                      }
+                      if (e.target.value === 'movie') {
+                        setBook(null);
+                        setRestaurant(null);
                       }
                       return setOption(e.target.value);
                     }}
                   >
                     <option value='movie'>Movie</option>
                     <option value='restaurant'>Restaurant</option>
+                    <option value='book'>Book</option>
                   </Select>
                   {
                     option === 'movie' &&
@@ -322,6 +351,39 @@ export const ReviewModal: React.FC<{
                       </Select>
                     </>
                   }
+                  {
+                    option === 'book' &&
+                    <>
+                      <FormLabel mb={3} fontSize="1.1em" fontWeight="semibold">
+                        Select Book
+                      </FormLabel>
+                      <Select
+                        bg={colorMode === 'light' ? 'white' : 'gray.700'}
+                        placeholder={book?.title || 'No Book Selected'}
+                        onChange={(e) => {
+                          e.preventDefault();
+                          const bookFound = books?.find(
+                            (bk) => bk?.title === e.target.value
+                          );
+                          if (!bookFound) {
+                            return setselectionError(`Please select a valid book!`);
+                          }
+                          setselectionError(``);
+                          setBook(bookFound);
+                          return;
+                        }}
+                      >
+                        {books &&
+                          books?.map((_) =>
+                            books?.title !== _.title ? (
+                              <option key={_.title}>{_.title}</option>
+                            ) : (
+                              ''
+                            )
+                          )}
+                      </Select>
+                    </>
+                  }
                 </>
               )}
               {selectionError && (
@@ -330,7 +392,7 @@ export const ReviewModal: React.FC<{
                 </Text>
               )}
               {
-                (option || isOpenedFromMovie || isOpenedFromRestaurant) &&
+                (option || isOpenedFromMovie || isOpenedFromRestaurant || isOpenedFromBook) &&
                 <>
                   <FormLabel my={3}>
                     <Flex justifyContent="space-between">
@@ -409,7 +471,7 @@ export const ReviewModal: React.FC<{
                       }
                       return setComment(e.target.value);
                     }}
-                    placeholder="This movie/restaurant was great because it was..."
+                    placeholder="I really enjoyed this because..."
                     resize="vertical"
                   />
                 </>
@@ -430,9 +492,9 @@ export const ReviewModal: React.FC<{
               colorScheme={process.env.COLOR_THEME}
               mr={3}
               onClick={(e) => handleSubmit(e, onClose)}
-              isDisabled={!!(commentError || selectionError) || (!movie && !restaurant)}
+              isDisabled={!!(commentError || selectionError) || (!movie && !restaurant && !book)}
             >
-              {isEditingReview && movie ? 'Edit Review' : 'Add Review'}
+              {isEditingReview ? 'Edit Review' : 'Add Review'}
             </Button>
             <Button
               onClick={() => {
@@ -441,6 +503,8 @@ export const ReviewModal: React.FC<{
                 setIsOpenedFromMovie(false);
                 setIsOpenedFromRestaurant(false);
                 setRestaurant(null);
+                setBook(null);
+                setIsOpenedFromBook(false);
               }}
             >
               Cancel

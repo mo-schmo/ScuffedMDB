@@ -17,11 +17,12 @@ import { PopulatedUserType } from '../../models/user';
 import { ReviewActions } from 'components/ReviewSection/ReviewSection';
 import { UserPageUser } from 'pages/user/[uID]';
 import { SerializedRestaurantType } from 'models/restaurant';
+import { SerializedBookType } from 'models/book';
 
 export const UserReviewSection: React.FC<{
   movies?: SerializedMovieType<ReviewType<PopulatedUserType>[]>[];
   restaurants?: SerializedRestaurantType<ReviewType<PopulatedUserType>[]>[];
-  books?: any;
+  books?: SerializedBookType<ReviewType<PopulatedUserType>[]>[] | null;
   user: UserPageUser;
 }> = ({ movies, user, restaurants, books}): React.ReactElement => {
 
@@ -33,9 +34,10 @@ export const UserReviewSection: React.FC<{
     try {
       const movieArr = movies ?? [];
       const restaurantArr = restaurants ?? [];
-      const bookArr = books ?? [];
+      const bookArr = books?.map(book => { return {...book, name: book?.title}}) ?? [];
       const merged = [...movieArr, ...restaurantArr, ...bookArr];
       merged.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      console.log(merged);
       setData(merged);
     }
     catch (e) {
@@ -43,7 +45,7 @@ export const UserReviewSection: React.FC<{
       setData([]);
       setError(true);
     }
-  }, [movies, restaurants]);
+  }, [movies, restaurants, books]);
 
   const getImage = (item) => {
     if (item?.movieID && item?.image){
@@ -55,6 +57,9 @@ export const UserReviewSection: React.FC<{
     else if (item?.alias && item?.image_url){
       return item.image_url;
     }
+    else if (item?.title){
+      return item?.openlibImageUrl ?? item?.googleImageUrl;
+    }
     return '';
   }
 
@@ -62,10 +67,26 @@ export const UserReviewSection: React.FC<{
     if (item?.movieID){
       return `/movie/${item?._id}`
     }
-    else if (item?.alias && item?.image_url){
+    else if (item?.alias){
       return `/restaurant/${item?._id}`
     }
+    else if (item?.title){
+      return `/book/${item?._id}`
+    }
     return '/';
+  }
+
+  const getKeyToInvalidate = (item) => {
+    if (item?.movieID){
+      return `movies`
+    }
+    else if (item?.alias){
+      return `restaurants`
+    }
+    else if (item?.title){
+      return `books`
+    }
+    return '';
   }
 
   const bp = useBreakpoint();
@@ -95,6 +116,7 @@ export const UserReviewSection: React.FC<{
                   alt={item.name}
                   layout="fill"
                   sizes="200px"
+                  objectFit={item?.title ? 'contain' : ''}
                   className={'borderRadius-xl'}
                 />
               </AspectRatio>
@@ -134,9 +156,10 @@ export const UserReviewSection: React.FC<{
                   {review && (
                     <ReviewActions
                       centred
-                      toInvalidate={item?.movieID ? 'movies' : 'restaurants'}
+                      toInvalidate={getKeyToInvalidate(item)}
                       movie={item?.movieID ? item : null}
-                      restaurant={item?.movieID ? null : item}
+                      restaurant={item?.alias ? item : null}
+                      book={item?.title ? item : null}
                       review={review}
                     />
                   )}

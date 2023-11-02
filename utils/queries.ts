@@ -1,6 +1,7 @@
 import { SerializedUser, PopulatedUserType } from './../models/user';
 import { ReviewType, SerializedMovieType } from '../models/movie';
 import { SerializedRestaurantType } from 'models/restaurant';
+import { SerializedBookType } from 'models/book';
 
 export const getMovies = async (): Promise<
   SerializedMovieType<ReviewType<PopulatedUserType>[]>[] | null
@@ -96,4 +97,42 @@ export const getRestaurant = async (
   }
 
   return restaurant;
+};
+
+export const getBooks = async() : Promise<SerializedBookType<ReviewType<PopulatedUserType>[]>[] | null> => {
+  const res: Response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URI}/api/book`
+  );
+  // eslint-disable-next-line no-return-await
+  const allBooks = await res.json();
+  if (!allBooks?.data) return null;
+  return allBooks.data;
+}
+
+export const getBook = async (
+  id: string | string[] | undefined,
+  isLean: boolean
+): Promise<SerializedBookType<ReviewType<PopulatedUserType>[]> | null> => {
+  if (!id) {
+    return null;
+  }
+  if (Array.isArray(id)) {
+    id = id.join('');
+  }
+  const res: Response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URI}/api/book/${id}/${
+      isLean && '?isLean=true'
+    }`
+  );
+
+  // eslint-disable-next-line no-return-await
+  const book: SerializedBookType<
+    ReviewType<PopulatedUserType>[]
+  > = await res.json();
+
+  if (((book as unknown) as { error: string })?.error) {
+    return null;
+  }
+
+  return book;
 };

@@ -8,7 +8,7 @@ import HomePage from '../components/HomePage';
 import LandingPage from '../components/LandingPage';
 import { ReviewType, SerializedMovieType } from '../models/movie';
 import user, { PopulatedUserType } from '../models/user';
-import { getMovie, getMovies, getRestaurant, getRestaurants } from '../utils/queries';
+import { getBooks, getMovie, getMovies, getRestaurant, getRestaurants } from '../utils/queries';
 import { SerializedRestaurantType } from 'models/restaurant';
 import {
   Center,
@@ -47,10 +47,10 @@ export default function Home({
   }
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const { data, error, isLoading: movieLoading } = useQuery(['movies'], () => getMovies());
-
   const { data: restaurantData, error: restaurantError, isLoading: restaurantLoading } = useQuery(['restaurants'], () => getRestaurants())
+  const { data: books, error: booksError, isLoading: booksLoading} = useQuery(['books'], () => getBooks());
 
-  if (error || restaurantError) {
+  if (error || restaurantError || booksError) {
     return <div>There was an error locating data :(</div>;
   }
 
@@ -61,7 +61,7 @@ export default function Home({
   return (
     <>
       {
-        (movieLoading || restaurantLoading) ? (
+        (movieLoading || restaurantLoading || booksLoading) ? (
           <Center className='h-screen'>
             <Spinner
               mt={6}
@@ -73,7 +73,7 @@ export default function Home({
             />
           </Center>
         ) : (
-          <HomePage user={session.user} movies={data} restaurants={restaurantData} />
+          <HomePage user={session.user} movies={data} restaurants={restaurantData} books={books}/>
         )
       }
     </>
@@ -157,6 +157,14 @@ export const getServerSideProps = async (
       },
     }
   };
+  if (ctx.query.book) {
+    return {
+      redirect: {
+        destination: `/book/${ctx.query.book}${ctx.query.review === 'true' ? '?review=true' : ''}`,
+        permanent: false
+      },
+    }
+  };
   if (ctx.query.user) {
     return {
       redirect: {
@@ -167,7 +175,7 @@ export const getServerSideProps = async (
   }
   let movies = null;
   if (session?.user) {
-    await Promise.all([queryClient.fetchQuery([`movies`], () => getMovies()), queryClient.fetchQuery([`restaurants`], () => getMovies())])
+    await Promise.all([queryClient.fetchQuery([`movies`], () => getMovies()), queryClient.fetchQuery([`restaurants`], () => getMovies()), queryClient.fetchQuery(['books'], () => getBooks())]);
   }
 
   return { props: { session, movies } };

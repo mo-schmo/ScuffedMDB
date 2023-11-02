@@ -6,17 +6,20 @@ import { UserAuthType } from 'next-auth';
 import { NextSeo } from 'next-seo';
 import { PopulatedUserType } from '../../models/user';
 import AlertBanner from '../AlertBanner';
+import { SerializedBookType } from 'models/book';
 
 interface HomePageProps {
   user: UserAuthType;
   movies: SerializedMovieType<ReviewType<PopulatedUserType>[]>[];
   restaurants?: SerializedRestaurantType<ReviewType<PopulatedUserType>[]>[];
+  books?: SerializedBookType<ReviewType<PopulatedUserType>[]>[] | null | undefined;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
   user,
   movies,
-  restaurants
+  restaurants,
+  books
 }): React.ReactElement => {
   return (
     <>
@@ -42,7 +45,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       <AppLayout user={user} showMovies>
         <div>
-          <CardGrid movies={movies} user={user} restaurants={restaurants} />
+          <CardGrid movies={movies} user={user} restaurants={restaurants} books={books}/>
         </div>
       </AppLayout>
     </>

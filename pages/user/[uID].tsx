@@ -13,7 +13,7 @@ import { useQuery, dehydrate, QueryClient, useQueryClient } from '@tanstack/reac
 import { NextSeo } from 'next-seo';
 import ErrorPage from '@components/ErrorPage';
 import { ReviewModal } from '@components/ReviewModal/ReviewModal';
-import { getMovies, getRestaurants } from 'utils/queries';
+import { getBooks, getMovies, getRestaurants } from 'utils/queries';
 import { SerializedRestaurantType } from 'models/restaurant';
 
 export interface UserPageUser extends SerializedUser {
@@ -26,9 +26,11 @@ interface EditUserProps {
 function EditUser({ desiredUser, ...props }: EditUserProps): React.ReactNode {
   const { data } = useQuery(['movies'], () => getMovies());
   const { data: restaurantData } = useQuery([`restaurants`], () => getRestaurants());
+  const { data: bookData } = useQuery([`books`], () => getBooks());
 
   const movies = data;
   const restaurants = restaurantData?.data;
+  const books = bookData;
 
   const [session, loading] = useSession();
   if ((typeof window !== 'undefined' && loading) || !session) return null;
@@ -56,7 +58,7 @@ function EditUser({ desiredUser, ...props }: EditUserProps): React.ReactNode {
     if (!rev) {
       return null;
     }
-    rev.restaurant = {
+    rev.item = {
       _id: restaurant._id,
       name: restaurant.name,
       image: restaurant.image_url,
@@ -76,10 +78,11 @@ function EditUser({ desiredUser, ...props }: EditUserProps): React.ReactNode {
       if (!rev) {
         return null;
       }
-      rev.movie = {
+      rev.item = {
         _id: movie._id,
         name: movie.name,
         image: movie.image,
+        
       };
       return rev;
     })
@@ -87,15 +90,33 @@ function EditUser({ desiredUser, ...props }: EditUserProps): React.ReactNode {
     .sort((a, b) => (a && b ? a.rating - b.rating : 0))
     .reverse();
 
-    const allRatings = [...allRestaurantRatings, ...allMovieRatings]
-
+    const allBookRatings = books
+    ?.map((book) => {
+      const rev = book?.reviews?.find((review) => {
+        if (!review.user) return false; // If user is deleted and has made a review the user object is null in the review.
+        return review.user._id === desiredUser._id;
+      });
+      if (!rev) {
+        return null;
+      }
+      rev.item = {
+        _id: book._id,
+        name: book.title,
+        image: book.openlibImageUrl ?? book.googleImageUrl,
+      };
+      return rev;
+    })
+    .filter((x) => x)
+    .sort((a, b) => (a && b ? a.rating - b.rating : 0))
+    .reverse();
+    const allRatings = [...allRestaurantRatings, ...allMovieRatings, ...allBookRatings];
   return (
     <AppLayout user={user} showReview>
       <NextSeo title={desiredUser.name + '#' + desiredUser.discriminator} />
       <Flex direction="column" pt={16} maxW="6xl" mx="auto">
         <AboutUserSection user={desiredUser} reviews={allRatings} />
         <Divider mt={10} />
-        <UserReviewSection movies={movies} restaurants={restaurants} user={desiredUser} />
+        <UserReviewSection movies={movies} restaurants={restaurants} books={books} user={desiredUser} />
         <ReviewModal user={session?.user} showReviewButton={false} />
       </Flex>
     </AppLayout>
@@ -149,7 +170,7 @@ export async function getServerSideProps(
   assertsIsSerializedUser(desiredUser);
   await queryClient.fetchQuery([`movies`], () => getMovies());
   await queryClient.fetchQuery([`restaurants`], () => getMovies());
-
+  await queryClient.fetchQuery([`movies`], () => getBooks());
   return {
     props: {
       session,

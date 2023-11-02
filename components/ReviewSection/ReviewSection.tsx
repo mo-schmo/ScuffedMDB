@@ -35,19 +35,21 @@ import { ReviewModalContext } from 'utils/ModalContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSession } from 'next-auth/client';
 import { SerializedRestaurantType } from 'models/restaurant';
-
+import { SerializedBookType } from 'models/book';
 
 
 interface ReviewProps {
     review: ReviewType<PopulatedUserType>;
     movie?: SerializedMovieType<ReviewType<PopulatedUserType>[]> | null;
     restaurant?: SerializedRestaurantType<ReviewType<PopulatedUserType>[]> | null;
+    book?: SerializedBookType<ReviewType<PopulatedUserType>[]> | null;
 }
 
 
 interface Props {
     movie?: SerializedMovieType<ReviewType<PopulatedUserType>[]>;
     restaurant?: SerializedRestaurantType<ReviewType<PopulatedUserType>[]>;
+    book?: SerializedBookType<ReviewType<PopulatedUserType>[]> | null;
 }
 
 interface ReviewActionsProps extends Omit<ReviewProps, 'user'> {
@@ -55,7 +57,7 @@ interface ReviewActionsProps extends Omit<ReviewProps, 'user'> {
     centred?: boolean;
 }
 
-export default function ReviewSection({ movie, restaurant }: Props) {
+export default function ReviewSection({ movie, restaurant, book }: Props) {
     return (
         <Box maxWidth="7xl" mt="9rem" mx={'auto'} mb={40}>
             {
@@ -100,6 +102,27 @@ export default function ReviewSection({ movie, restaurant }: Props) {
                     </Flex>
                 </>
             }
+            {
+                book &&
+                <>
+                    <VStack alignItems="center" spacing={3} mt={{ base: 28, lg: 0 }}>
+                        <Wave mx="auto" width={{ base: '70%', md: '30%' }} />
+                        <Heading fontSize="6xl">
+                            {book.reviews.length} Review{book.reviews.length !== 1 && 's'}
+                        </Heading>
+                        <Wave
+                            mt={'15px!important'}
+                            mx="auto!important"
+                            width={{ base: '70%', md: '30%' }}
+                        />
+                    </VStack>
+                    <Flex mt={10} direction="column">
+                        {book.reviews.map((review: ReviewType<PopulatedUserType>, i) => (
+                            <Review book={book} review={review} key={i.toString()} />
+                        ))}
+                    </Flex>
+                </>
+            }
         </Box >
     );
 }
@@ -110,11 +133,12 @@ export const ReviewActions = ({
     movie,
     restaurant,
     centred,
+    book
 }: ReviewActionsProps): JSX.Element | null => {
     const [session] = useSession();
     const userId = session?.user?._id || session?.user?.sub; // accomodate incase theya re UserAuthtype or MongoUserType
     const toast = useToast();
-    const { onOpen, setMovie, setRestaurant } = useContext(ReviewModalContext);
+    const { onOpen, setMovie, setRestaurant, setBook } = useContext(ReviewModalContext);
     const queryClient = useQueryClient();
     const handleReviewDelete = async (
         e: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -125,6 +149,7 @@ export const ReviewActions = ({
             body: JSON.stringify({
                 movieID: movie?._id,
                 restaurantID: restaurant?._id,
+                bookID: book?._id,
                 reviewID: review._id,
             }),
         });
@@ -145,6 +170,7 @@ export const ReviewActions = ({
             });
             await queryClient.invalidateQueries({ queryKey: [(toInvalidate || `movie-${movie?._id}`)] });
             await queryClient.invalidateQueries({ queryKey: [(toInvalidate || `restaurant-${restaurant?._id}`)] });
+            await queryClient.invalidateQueries({ queryKey: [(toInvalidate || `book-${book?._id}`)] });
         }
     };
     if (review?.user?._id === userId || session?.user?.isAdmin) {
@@ -162,11 +188,15 @@ export const ReviewActions = ({
                             colorScheme={process.env.COLOR_THEME}
                             variant="ghost"
                             onClick={() => {
+                                console.log(book);
                                 if (movie) {
                                     setMovie(movie);
                                 }
                                 else if (restaurant) {
                                     setRestaurant(restaurant);
+                                }
+                                else if (book) {
+                                    setBook(book);
                                 }
                                 onOpen();
                             }}
@@ -219,7 +249,7 @@ export const ReviewActions = ({
 };
 
 
-const Review = ({ review, movie, restaurant }: ReviewProps) => {
+const Review = ({ review, movie, restaurant, book }: ReviewProps) => {
     const { colorMode } = useColorMode();
     return (
         <VStack mt={8} alignItems="flex-start" spacing={3} px={4}>
@@ -248,6 +278,9 @@ const Review = ({ review, movie, restaurant }: ReviewProps) => {
                     }
                     {
                         restaurant && <ReviewActions review={review} restaurant={restaurant} />
+                    }
+                    {
+                        book && <ReviewActions review={review} book={book} />
                     }
                 </chakra.div>
                 <chakra.div
