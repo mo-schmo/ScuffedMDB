@@ -191,9 +191,9 @@ function BookSearchResult({ data, loading, setSuccess, setError, onClose }: any)
                         onClick={async () => addBook(result)}
                     />
                     <AspectRatio
-                        maxWidth="150px"
+                        maxWidth="250px"
                         width="full"
-                        minWidth="150px"
+                        minWidth="200px"
                     >
                         <SkeletonImage data={result} key={index.toString()} />
                     </AspectRatio>
@@ -231,7 +231,6 @@ function SkeletonImage({ data }: { data: ItemSchema }) {
 
     return (
         <AspectRatio
-            ratio={16 / 9}
             width="full"
         >
             <Skeleton isLoaded={imageLoaded} width="full" height="full">
