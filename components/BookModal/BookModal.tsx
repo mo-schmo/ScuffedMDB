@@ -191,7 +191,6 @@ function BookSearchResult({ data, loading, setSuccess, setError, onClose }: any)
                         onClick={async () => addBook(result)}
                     />
                     <AspectRatio
-                        ratio={16 / 9}
                         maxWidth="150px"
                         width="full"
                         minWidth="150px"
