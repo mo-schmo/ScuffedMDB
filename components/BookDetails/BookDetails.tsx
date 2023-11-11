@@ -41,6 +41,7 @@ import { ReviewType, SerializedBookType } from 'models/book';
 import { format } from 'date-fns';
 import { OpenLibSchema, RatingSchema } from 'models/api/books/openLibrarySchema';
 import { FcGoogle } from "react-icons/fc";
+import { AiFillAmazonSquare } from "react-icons/ai";
 import { FaAmazon, FaGoodreadsG } from "react-icons/fa";
 
 
@@ -324,7 +325,7 @@ export default function BookDetails({ book, user }: Props): any {
                 {
                   openlibData?.identifiers?.amazon?.[0] &&
                   <Link href={`https://www.amazon.com/dp/${openlibData?.identifiers?.amazon?.[0]}`} passHref target="_blank">
-                    <Icon as={FcGoogle} boxSize={50} />
+                    <Icon as={AiFillAmazonSquare} boxSize={50} />
                   </Link>
                 }
               </HStack>
@@ -393,7 +394,7 @@ export default function BookDetails({ book, user }: Props): any {
                 </StatLabel>
                 <StatNumber fontSize="5xl" fontWeight="bold">
                   <Link href={`https://www.amazon.com/dp/${openlibData?.identifiers?.amazon?.[0]}`} passHref target="_blank">
-                    <Icon as={FcGoogle} boxSize={50} />
+                    <Icon as={AiFillAmazonSquare} boxSize={50} />
                   </Link>
                 </StatNumber>
               </Stat>
