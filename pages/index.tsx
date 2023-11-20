@@ -8,7 +8,7 @@ import HomePage from '../components/HomePage';
 import LandingPage from '../components/LandingPage';
 import { ReviewType, SerializedMovieType } from '../models/movie';
 import user, { PopulatedUserType } from '../models/user';
-import { getBooks, getMovie, getMovies, getRestaurant, getRestaurants } from '../utils/queries';
+import { getBook, getBooks, getMovie, getMovies, getRestaurant, getRestaurants } from '../utils/queries';
 import { SerializedRestaurantType } from 'models/restaurant';
 import {
   Center,
@@ -100,6 +100,7 @@ export const getServerSideProps = async (
   const session = await getSession(ctx);
   const queryClient = new QueryClient();
   if (!session?.user) {
+    console.log('Inside this block')
     let singleMovieData: SerializedMovieType<
       ReviewType<PopulatedUserType>[]
     > | null = null;
@@ -109,12 +110,13 @@ export const getServerSideProps = async (
     let desiredUser = null;
 
     if (ctx.query.movie) {
-      // singleMovieData = await getMovie(ctx.query.movie, true);
       await queryClient.fetchQuery([`movie-${ctx.query.movie}`, ctx.query.movie], () => getMovie(ctx.query.movie, true));
     }
     if (ctx.query.restaurant) {
-      // singleRestaurantData = await getRestaurant(ctx.query.restaurant, true);
       await queryClient.fetchQuery([`restaurant-${ctx.query.restaurant}`, ctx.query.movie], () => getRestaurant(ctx.query.restaurant, true));
+    }
+    if (ctx.query.book) {
+      await queryClient.fetchQuery([`book-${ctx.query.book}`, ctx.query.book], () => getBook(ctx.query.restaurant, true));
     }
     if (ctx.query.user) {
       try {
@@ -160,7 +162,7 @@ export const getServerSideProps = async (
   if (ctx.query.book) {
     return {
       redirect: {
-        destination: `/book/${ctx.query.book}${ctx.query.review === 'true' ? '?review=true' : ''}`,
+        destination: `/book/${ctx.query.book}`,
         permanent: false
       },
     }

@@ -21,11 +21,11 @@ export const LandingPage: React.FC<{
 }> = ({ movie, desiredUser, restaurant }): React.ReactElement => {
   const { colorMode } = useColorMode();
   const router = useRouter();
-  const { user: userID, movie: movieID, restaurant: restaurantID, review } = router.query;
+  const { user: userID, movie: movieID, restaurant: restaurantID, review, book: bookID } = router.query;
   const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'ScuffedMDB';
   const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URI}/${userID && movieID ? `?movie=${movieID}&user=${userID}` : ''
     }${userID && !movieID ? `?user=${userID}` : ''}${!userID && movieID ? `?movie=${movieID}` : ''
-    }${restaurantID ? `?restaurant=${restaurantID}` : ''}${review ? `&review=${review}` : ''}`;
+    }${restaurantID ? `?restaurant=${restaurantID}` : ''}${bookID ? `?book=${bookID}` : ''}${review ? `&review=${review}` : ''}`;
   return (
     <div className="h-screen bg-slate-950">
       <NextSeo

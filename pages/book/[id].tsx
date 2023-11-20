@@ -3,7 +3,7 @@ import { PopulatedUserType } from 'models/user';
 import { Session } from 'next-auth';
 import { getSession, useSession } from 'next-auth/client';
 import { useRouter } from 'next/router';
-import { getBook, getRestaurant } from '../../utils/queries';
+import { getBook } from '../../utils/queries';
 import { useQuery, dehydrate, QueryClient } from '@tanstack/react-query';
 import ErrorPage from '@components/ErrorPage';
 import AppLayout from '@components/AppLayout';
@@ -94,7 +94,7 @@ export async function getServerSideProps(
 
     }
 
-    await queryClient.fetchQuery([`book-${id}`, id], () => getRestaurant(id, true));
+    await queryClient.fetchQuery([`book-${id}`, id], () => getBook(id, true));
 
     return {
         props: {
