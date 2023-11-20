@@ -62,7 +62,7 @@ export const LandingPage: React.FC<{
           mx="auto"
           textAlign={{ base: `left`, sm: `center` }}
         >
-          <Flex className='content-center items-center justify-center' alignItems='center' minH={{base:'60vh', md: '80vw'}}>
+          <Flex className='content-center items-center justify-center' alignItems='center' minH={{base:'60vh'}}>
             <Image
               src={`/svg/logo-pink-landing.svg`}
               width={400}
