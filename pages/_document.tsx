@@ -19,7 +19,7 @@ class MyDocument extends Document {
     return (
       <Html>
         <Head />
-        <div className='snow z-[-1000]'></div>
+        <div className='z-[-1000]'></div>
         <body style={{ width: `100vw`, height: `100vh` }}>
           <ColorModeScript initialColorMode={theme.config.initialColorMode} />
           <Main />
